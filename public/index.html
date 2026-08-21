@@ -29,7 +29,11 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"CreativeWork","@id":"https://s.p4theater.cn/#work","name":"膜下","alternateName":["膜下","Under the Membrane","膜の下"],"description":"P4剧场《人类投降派》的互动数字衍生作品：四个声音在雾中游移，第五盏灯由观看者点亮。","inLanguage":"zh-Hans","url":"https://s.p4theater.cn/","image":"https://s.p4theater.cn/og.jpg","isBasedOn":{"@type":"CreativeWork","name":"Human Surrender Faction","url":"https://p4theater.top/human-surrender/"},"creator":{"@type":"Organization","name":"P4 Theater","url":"https://p4theater.top/"},"publisher":{"@type":"Organization","name":"P4 Theater","url":"https://p4theater.top/"},"isPartOf":{"@type":"WebSite","name":"P4 Theater Main Archive","url":"https://a.p4theater.top/"}}</script>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/assets/app.987bc776488f.css">
-<link rel="alternate" href="https://s.p4theater.top/" data-edition="global-top"></head>
+<link rel="alternate" href="https://s.p4theater.top/" data-edition="global-top"><style id="edition-switch-style">
+#edition-switch{position:fixed;left:14px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:30;display:inline-flex;align-items:center;justify-content:center;min-height:46px;box-sizing:border-box;padding:0 13px;text-decoration:none;font-family:var(--mono);font-size:10px;letter-spacing:.13em;color:#9a948b;background:rgba(8,8,6,.64);border:1px solid rgba(244,239,228,.08);border-radius:3px;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);touch-action:manipulation;transition:color .5s,border-color .5s}
+#edition-switch:hover,#edition-switch:focus-visible{color:var(--bone);border-color:rgba(244,239,228,.2)}
+@media(max-width:600px){#edition-switch{left:10px;min-height:44px;padding:0 11px}}
+</style></head>
 <body>
 <div id="veil" aria-hidden="true"><span>膜　下</span></div>
 <main id="experience">
@@ -56,6 +60,7 @@
   <button id="about" class="pill" type="button"></button>
 </div>
 <button id="exit" class="pill ui-control" type="button"></button>
+<a id="edition-switch" href="https://s.p4theater.top/" rel="alternate noopener" hreflang="zh-Hans" aria-label="国际版·.TOP">国际版·.TOP</a>
 
 <section id="aboutPanel" role="dialog" aria-modal="true" aria-labelledby="about-title" aria-hidden="true" inert hidden>
   <button id="aboutClose" class="ui-control" type="button"></button>

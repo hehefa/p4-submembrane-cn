@@ -31,13 +31,39 @@ def write(path: str, data: bytes) -> None:
 
 def patch_html(raw: str, route: str) -> str:
     raw = raw.replace(SOURCE, TARGET)
-    # Preserve a direct, machine-readable relationship to the original global
-    # edition without changing the visible artwork or its text.
     global_url = SOURCE + route
     marker = f'<link rel="alternate" href="{global_url}" data-edition="global-top">'
     if marker not in raw:
         raw = raw.replace("</head>", marker + "</head>", 1)
+
+    edition_text = {
+        "/": "国际版·.TOP",
+        "/en/": "GLOBAL·.TOP",
+        "/ja/": "GLOBAL·.TOP",
+    }[route]
+    edition_css = """<style id="edition-switch-style">
+#edition-switch{position:fixed;left:14px;bottom:calc(14px + env(safe-area-inset-bottom));z-index:30;display:inline-flex;align-items:center;justify-content:center;min-height:46px;box-sizing:border-box;padding:0 13px;text-decoration:none;font-family:var(--mono);font-size:10px;letter-spacing:.13em;color:#9a948b;background:rgba(8,8,6,.64);border:1px solid rgba(244,239,228,.08);border-radius:3px;backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);touch-action:manipulation;transition:color .5s,border-color .5s}
+#edition-switch:hover,#edition-switch:focus-visible{color:var(--bone);border-color:rgba(244,239,228,.2)}
+@media(max-width:600px){#edition-switch{left:10px;min-height:44px;padding:0 11px}}
+</style>"""
+    if 'id="edition-switch-style"' not in raw:
+        raw = raw.replace("</head>", edition_css + "</head>", 1)
+
+    edition_link = (
+        f'<a id="edition-switch" href="{global_url}" rel="alternate noopener" '
+        f'hreflang="{route_language(route)}" aria-label="{edition_text}">{edition_text}</a>'
+    )
+    if 'id="edition-switch"' not in raw:
+        raw = raw.replace(
+            '<button id="exit" class="pill ui-control" type="button"></button>',
+            '<button id="exit" class="pill ui-control" type="button"></button>\n' + edition_link,
+            1,
+        )
     return raw
+
+
+def route_language(route: str) -> str:
+    return {"/": "zh-Hans", "/en/": "en", "/ja/": "ja"}[route]
 
 
 def main() -> None:

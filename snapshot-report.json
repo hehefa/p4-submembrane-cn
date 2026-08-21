@@ -2,12 +2,12 @@
   "source": "https://s.p4theater.top",
   "target": "https://s.p4theater.cn",
   "routes": {
-    "/": 5708,
-    "/en/": 5865,
-    "/ja/": 5935
+    "/": 6605,
+    "/en/": 6754,
+    "/ja/": 6824
   },
   "assets": 77,
-  "bytes": 32507300,
+  "bytes": 32509975,
   "files": [
     "assets/app.1ead4747ed54.js",
     "assets/app.987bc776488f.css",
