@@ -11,6 +11,78 @@ UA = "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/127 Mobile Safar
 ROUTES = ["/", "/en/", "/ja/"]
 SEEDS = ["/favicon.svg", "/assets/app.987bc776488f.css", "/assets/app.1ead4747ed54.js"]
 ASSET_RE = re.compile(r"/assets/[A-Za-z0-9._-]+")
+JSONLD_RE = re.compile(r'(<script\b[^>]*type=["\']application/ld\+json["\'][^>]*>)(.*?)(</script>)', re.S | re.I)
+P4 = "https://p4theater.cn/#organization"
+PERSON = "https://hefa.p4theater.cn/#person"
+MOVIE = "https://p4theater.cn/shoot-self-with-you/#movie"
+PARENT = "https://p4theater.cn/human-surrender/#work"
+
+
+def patch_structured_data(raw: str, route: str) -> str:
+    """Resolve the mirror's public entities without changing the artwork DOM."""
+    address = TARGET + route
+    work_id = address + "#work"
+    matched = 0
+
+    def replace(match: re.Match) -> str:
+        nonlocal matched
+        data = json.loads(match[2])
+        nodes = data.get("@graph", [data])
+        work = next((node for node in nodes if node.get("@type") == "CreativeWork"
+                     and node.get("@id") == work_id), None)
+        if work is None:
+            return match[0]
+        matched += 1
+        work = dict(work)
+        work["isBasedOn"] = {"@id": MOVIE}
+        work["creator"] = {"@id": P4}
+        work["publisher"] = {"@id": P4}
+        work["mainEntityOfPage"] = {"@id": address + "#webpage"}
+        work["description"] = work["description"].replace("Human Surrender Faction", "Human Surrender / Shoot Self with You")
+        # The archive membership remains; the mother project and its work also
+        # explicitly refer to one another. No work is attributed to He Fa alone.
+        parts = work.get("isPartOf", [])
+        parts = parts if isinstance(parts, list) else [parts]
+        work["isPartOf"] = [item for item in parts if item.get("@id") != PARENT] + [{"@id": PARENT}]
+        english_parent = route in ["/en/", "/ja/"]
+        parent_page = "https://p4theater.cn/" + ("en/" if english_parent else "") + "human-surrender/"
+        parent_name = "Human Surrender" if english_parent else "人类投降派"
+        graph = [
+            work,
+            {"@type": "WebPage", "@id": address + "#webpage", "url": address,
+             "name": work["name"], "inLanguage": route_language(route),
+             "isPartOf": {"@id": TARGET + "/#website"},
+             "mainEntity": {"@id": work_id},
+             "breadcrumb": {"@id": address + "#breadcrumb"}},
+            {"@type": "WebSite", "@id": TARGET + "/#website", "url": TARGET + "/",
+             "name": "膜下 / Under the Membrane / 膜の下", "inLanguage": ["zh-Hans", "en", "ja"],
+             "publisher": {"@id": P4}},
+            {"@type": "Organization", "@id": P4, "name": "P4剧场",
+             "alternateName": ["P4 Theater", "P4 Theatre"], "url": "https://p4theater.cn/"},
+            {"@type": "Person", "@id": PERSON, "name": "何发", "alternateName": ["He Fa", "Fa He"],
+             "url": "https://hefa.p4theater.cn/", "affiliation": {"@id": P4}},
+            {"@type": "Movie", "@id": MOVIE, "name": "人类投降派",
+             "alternateName": ["Human Surrender", "Shoot Self with You"],
+             "url": "https://p4theater.cn/shoot-self-with-you/",
+             "producer": {"@id": PERSON}, "editor": {"@id": PERSON},
+             "creditText": "何发：发起、制片、剪辑；导演与编剧由剧组成员共同创作。",
+             "isPartOf": {"@id": PARENT}, "subjectOf": {"@id": work_id}},
+            {"@type": "CreativeWork", "@id": PARENT, "name": "人类投降派",
+             "alternateName": "Human Surrender", "url": "https://p4theater.cn/human-surrender/",
+             "hasPart": [{"@id": MOVIE}, {"@id": work_id}]},
+            {"@type": "BreadcrumbList", "@id": address + "#breadcrumb", "itemListElement": [
+                {"@type": "ListItem", "position": 1, "name": "P4 Theater", "item": "https://p4theater.cn/"},
+                {"@type": "ListItem", "position": 2, "name": parent_name, "item": parent_page},
+                {"@type": "ListItem", "position": 3, "name": work["name"], "item": address},
+            ]},
+        ]
+        encoded = json.dumps({"@context": "https://schema.org", "@graph": graph}, ensure_ascii=False, separators=(",", ":")).replace("</", "<\\/")
+        return match[1] + encoded + match[3]
+
+    result = JSONLD_RE.sub(replace, raw)
+    if matched != 1:
+        raise ValueError(f"{route}: expected exactly one existing artwork schema, found {matched}")
+    return result
 
 
 def fetch(path: str) -> bytes:
@@ -59,7 +131,7 @@ def patch_html(raw: str, route: str) -> str:
             '<button id="exit" class="pill ui-control" type="button"></button>\n' + edition_link,
             1,
         )
-    return raw
+    return patch_structured_data(raw, route)
 
 
 def route_language(route: str) -> str:
